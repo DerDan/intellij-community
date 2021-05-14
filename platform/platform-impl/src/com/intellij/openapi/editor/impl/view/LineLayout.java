@@ -305,11 +305,18 @@ abstract class LineLayout {
       GroupNumbers groupNumbers = fontInfo.getGroupNumbers();
       if (groupNumbers != GroupNumbers.NONE) {
         while (to > from) {
-          int count = countDigitSequence(chars, from, to);
-          if (count >= 4) {
-            chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, 3));
-            from += count;
-            count = 0;
+          int count = 0;
+          int left = to - from;
+          boolean hex = left > 3 && chars[from] == '0' && (chars[from + 1] == 'x' || chars[from + 1] == 'X');
+          if (hex) {
+            count = countHexSequence(chars, from + 2, to);
+            if (count >= 5)
+            {
+              chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, from + 2, isRtl, fontInfo));
+              from +=2;
+              chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, 4));
+              from += count;
+              count = 0;
             }else{
               count = 2;
             }
@@ -343,11 +350,6 @@ abstract class LineLayout {
         chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, to, isRtl, fontInfo));
       }
     }
-  }
-
-  private static boolean isMonospaced(FontInfo info)
-  {
-    return FontFamilyService.isMonospaced(info.getFont().getFamily());
   }
 
   private static int countHexSequence(char[] chars, int from, int to) {
