@@ -367,7 +367,7 @@ abstract class LineLayout {
     int maxChar = to - from;
     int count;
     for (count = 0; count < maxChar; count++) {
-      if (Character.isDigit(chars[from + count]) || chars[from + count] == '.' || chars[from + count] == ',') {
+      if (Character.isDigit(chars[from + count])) {
         break;
       }
     }
