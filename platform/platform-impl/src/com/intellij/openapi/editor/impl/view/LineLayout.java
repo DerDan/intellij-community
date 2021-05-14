@@ -112,7 +112,7 @@ abstract class LineLayout {
   }
 
   private static List<BidiRun> createFragments(@NotNull EditorView view, @NotNull CharSequence text,
-                                                @JdkConstants.FontStyle int fontStyle) {
+                                               @JdkConstants.FontStyle int fontStyle) {
     if (text.length() == 0) return Collections.emptyList();
 
     FontFallbackIterator ffi = new FontFallbackIterator()
@@ -203,7 +203,9 @@ abstract class LineLayout {
     if (token == null) return null;
     Commenter commenter = LanguageCommenters.INSTANCE.forLanguage(token.getLanguage());
     if (!(commenter instanceof CodeDocumentationAwareCommenter) ||
-        !token.equals(((CodeDocumentationAwareCommenter)commenter).getLineCommentTokenType())) return null;
+        !token.equals(((CodeDocumentationAwareCommenter)commenter).getLineCommentTokenType())) {
+      return null;
+    }
     String prefix = commenter.getLineCommentPrefix();
     return prefix == null ? null : StringUtil.trimTrailing(prefix); // some commenters (e.g. for Python) include space in comment prefix
   }
@@ -212,7 +214,9 @@ abstract class LineLayout {
     if (token1 == token2) return false;
     if (token1 == null || token2 == null) return true;
     if (StringEscapesTokenTypes.STRING_LITERAL_ESCAPES.contains(token1) ||
-        StringEscapesTokenTypes.STRING_LITERAL_ESCAPES.contains(token2)) return false;
+        StringEscapesTokenTypes.STRING_LITERAL_ESCAPES.contains(token2)) {
+      return false;
+    }
     if (token1 != TokenType.WHITE_SPACE && token2 != TokenType.WHITE_SPACE && !token1.getLanguage().is(token2.getLanguage())) return true;
     Language language = token1.getLanguage();
     if (language == Language.ANY) language = token2.getLanguage();
@@ -295,8 +299,64 @@ abstract class LineLayout {
   private static void addTextFragmentIfNeeded(Chunk chunk, char[] chars, int from, int to, FontInfo fontInfo, boolean isRtl) {
     if (to > from) {
       assert fontInfo != null;
-      chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, to, isRtl, fontInfo));
+      //boolean decimalSeparator = false; // Separator
+      if (true) {
+        while (to > from) {
+          int count = countDigitSequence(chars, from, to);
+          if (count >= 4) {
+            chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, 3));
+            from += count;
+            count = 0;
+            if (to > from + 3) {
+              if ((chars[from] == '.') || (chars[from] == ',')) {
+                count = countDigitSequence(chars, from + 1, to);
+                if (count >= 4) {
+                  chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, from + 1, isRtl, fontInfo));
+                  from += 1;
+                  chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, -3));
+                  from += count;
+                  count = 0;
+                }
+                else {
+                  count = 1;
+                }
+              }
+            }
+          }
+          count += countOther(chars, from + count, to);
+          if (count > 0) {
+            chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, from + count, isRtl, fontInfo));
+            from += count;
+          }
+        }
+      }
+      else {
+        chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, to, isRtl, fontInfo));
+      }
     }
+  }
+
+  private static int countOther(char[] chars, int from, int to) {
+    int maxChar = to - from;
+    int count;
+    for (count = 0; count < maxChar; count++) {
+      if (Character.isDigit(chars[from + count])) {
+        break;
+      }
+    }
+    return count;
+  }
+
+  private static int countDigitSequence(char[] chars, int from, int to) {
+    if (from >= to) return 0;
+    int maxChar = to - from;
+    int count;
+    for (count = 0; count < maxChar; count++) {
+      if (!Character.isDigit(chars[from + count])) {
+        break;
+      }
+    }
+    return count;
   }
 
   Iterable<VisualFragment> getFragmentsInVisualOrder(final float startX) {
@@ -396,7 +456,7 @@ abstract class LineLayout {
       if (myChunk == null) return BidiRun.EMPTY_ARRAY;
       BidiRun run = new BidiRun(myChunk.endOffset);
       run.chunks = Collections.singletonList(myChunk);
-      return new BidiRun[] {run};
+      return new BidiRun[]{run};
     }
   }
 
@@ -457,7 +517,6 @@ abstract class LineLayout {
           }
           else if (run.startOffset < offset) {
             originLevel = run.level;
-
           }
         }
         return originLevel > 0 ? 0 : -1;
@@ -768,11 +827,11 @@ abstract class LineLayout {
       if (myFragmentIndex >= chunk.fragments.size()) {
         myFragmentIndex = 0;
         myChunkIndex++;
-          if (myChunkIndex >= chunks.size()) {
-            myChunkIndex = 0;
-            myOffsetInsideRun = 0;
-            myRunIndex++;
-          }
+        if (myChunkIndex >= chunks.size()) {
+          myChunkIndex = 0;
+          myOffsetInsideRun = 0;
+          myRunIndex++;
+        }
       }
 
       return myFragment;
