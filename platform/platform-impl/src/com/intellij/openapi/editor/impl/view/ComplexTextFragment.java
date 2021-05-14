@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.awt.font.GlyphVector;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -27,6 +28,10 @@ class ComplexTextFragment extends TextFragment {
                                             // We expect no more than 1025 chars in a fragment, so 'short' should be enough.
 
   ComplexTextFragment(char @NotNull [] lineChars, int start, int end, boolean isRtl, @NotNull FontInfo fontInfo) {
+    this(lineChars, start, end, isRtl, fontInfo, 0);
+  }
+
+  ComplexTextFragment(char @NotNull [] lineChars, int start, int end, boolean isRtl, @NotNull FontInfo fontInfo, int squeeze) {
     super(end - start);
     assert start >= 0;
     assert end <= lineChars.length;
@@ -40,6 +45,11 @@ class ComplexTextFragment extends TextFragment {
     int lastCharIndex = -1;
     float lastX = isRtl ? totalWidth : 0;
     float prevX = lastX;
+
+    if (!isRtl && squeeze != 0) {
+      double gapBetween = 2 * fontInfo.charWidth2D(' ') / 8;
+      squeezeGlyphs(numGlyphs, squeeze, gapBetween);
+    }
     // Here we determine coordinates for boundaries between characters.
     // They will be used to place caret, last boundary coordinate is also defining the width of text fragment.
     //
@@ -90,6 +100,26 @@ class ComplexTextFragment extends TextFragment {
           offset++;
         }
       }
+    }
+  }
+
+  private void squeezeGlyphs(int numGlyphs, int squeeze, double pixels) {
+    if (squeeze == 0) {
+      return;
+    }
+    int offset = 0;
+    if (squeeze > 0) {
+      offset = squeeze - (numGlyphs % squeeze);
+    }
+    else {
+      squeeze = -squeeze;
+    }
+    double advance = pixels / (squeeze - 1);
+    for (int glyphIndex = 0; glyphIndex < numGlyphs; glyphIndex++) {
+      Point2D glyphPosition = myGlyphVector.getGlyphPosition(glyphIndex);
+      double moveX = pixels - ((glyphIndex + offset) % squeeze) * advance;
+      glyphPosition.setLocation(glyphPosition.getX() + moveX, glyphPosition.getY());
+      myGlyphVector.setGlyphPosition(glyphIndex, glyphPosition);
     }
   }
 
@@ -209,11 +239,11 @@ class ComplexTextFragment extends TextFragment {
       int visualOffset = visualColumnToVisualOffset(i);
       float newPos = myCharPositions[visualOffset];
       if (relX < (newPos + prevPos) / 2) {
-        return new int[] {i, relX <= prevPos ? 0 : 1};
+        return new int[]{i, relX <= prevPos ? 0 : 1};
       }
       prevPos = newPos;
     }
-    return new int[] {columnCount, relX <= myCharPositions[myCharPositions.length - 1] ? 0 : 1};
+    return new int[]{columnCount, relX <= myCharPositions[myCharPositions.length - 1] ? 0 : 1};
   }
 
   @Override
@@ -239,7 +269,7 @@ class ComplexTextFragment extends TextFragment {
     ourGlyphsProcessed += glyphCount;
     if (++ourDrawingCount == 10000) {
       LOG.debug("Text rendering stats: " + ourCharsProcessed + " chars, " + ourGlyphsProcessed + " glyps, ratio - " +
-                ((float) ourGlyphsProcessed) / ourCharsProcessed);
+                ((float)ourGlyphsProcessed) / ourCharsProcessed);
       ourDrawingCount = 0;
       ourCharsProcessed = 0;
       ourGlyphsProcessed = 0;
