@@ -33,6 +33,7 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
   @Nullable private String myBoldSubFamily;
 
   private boolean myUseLigatures;
+  private boolean mySqueezeNumbers;
   private float myLineSpacing = DEFAULT_LINE_SPACING;
 
   @Nullable private Runnable myChangeListener;
@@ -250,6 +251,16 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
   public void setUseLigatures(boolean useLigatures) {
     if (useLigatures != myUseLigatures) {
       myUseLigatures = useLigatures;
+      if (myChangeListener != null) {
+        myChangeListener.run();
+      }
+    }
+  }
+
+  @Override
+  public void setSqueezeNumbers(boolean squeezeNumbers) {
+    if (squeezeNumbers != mySqueezeNumbers) {
+      mySqueezeNumbers = squeezeNumbers;
       if (myChangeListener != null) {
         myChangeListener.run();
       }

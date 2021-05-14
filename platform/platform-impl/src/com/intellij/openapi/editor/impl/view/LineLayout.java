@@ -39,6 +39,7 @@ import java.util.stream.Stream;
  */
 abstract class LineLayout {
   private static final Logger LOG = Logger.getInstance(LineLayout.class);
+  private static final String HEX_DIGITS = "0123456789ABCDEFabcdef";
 
   private LineLayout() {}
 
@@ -299,27 +300,37 @@ abstract class LineLayout {
   private static void addTextFragmentIfNeeded(Chunk chunk, char[] chars, int from, int to, FontInfo fontInfo, boolean isRtl) {
     if (to > from) {
       assert fontInfo != null;
-      //boolean decimalSeparator = false; // Separator
       if (true) {
         while (to > from) {
-          int count = countDigitSequence(chars, from, to);
-          if (count >= 4) {
-            chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, 3));
-            from += count;
-            count = 0;
-            if (to > from + 3) {
-              if ((chars[from] == '.') || (chars[from] == ',')) {
-                count = countDigitSequence(chars, from + 1, to);
-                if (count >= 4) {
-                  chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, from + 1, isRtl, fontInfo));
-                  from += 1;
-                  chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, -3));
-                  from += count;
-                  count = 0;
-                }
-                else {
-                  count = 1;
-                }
+          int count = 0;
+          int left = to - from;
+          boolean hex = left > 3 && chars[from] == '0' && (chars[from + 1] == 'x' || chars[from + 1] == 'X');
+          if (hex) {
+            count = countHexSequence(chars, from + 2, to);
+            if (count >= 5)
+            {
+              chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, from + 2, isRtl, fontInfo));
+              from +=2;
+              chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, 4));
+              from += count;
+              count = 0;
+            }
+          }
+          else {
+            boolean decimalSeparator = chars[from] == '.' || chars[from] == ',';
+            count = countDigitSequence(chars, from + (decimalSeparator ? 1 : 0), to);
+            if (count >= 4) {
+              if (decimalSeparator) {
+                chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, from + 1, isRtl, fontInfo));
+                from += 1;
+              }
+              chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, decimalSeparator ? -3 : 3));
+              from += count;
+              count = 0;
+            }
+            else {
+              if (decimalSeparator) {
+                count += 1;
               }
             }
           }
@@ -336,11 +347,23 @@ abstract class LineLayout {
     }
   }
 
+  private static int countHexSequence(char[] chars, int from, int to) {
+    if (from >= to) return 0;
+    int maxChar = to - from;
+    int count;
+    for (count = 0; count < maxChar; count++) {
+      if (HEX_DIGITS.indexOf(chars[from + count]) < 0) {
+        break;
+      }
+    }
+    return count;
+  }
+
   private static int countOther(char[] chars, int from, int to) {
     int maxChar = to - from;
     int count;
     for (count = 0; count < maxChar; count++) {
-      if (Character.isDigit(chars[from + count])) {
+      if (Character.isDigit(chars[from + count]) || chars[from + count] == '.' || chars[from + count] == ',') {
         break;
       }
     }

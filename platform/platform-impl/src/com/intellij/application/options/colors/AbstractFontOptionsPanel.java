@@ -52,6 +52,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
   @NotNull private final JTextField myLineSpacingField = new JBTextField(4);
   private final AbstractFontCombo<?> myPrimaryCombo;
   private final JCheckBox myEnableLigaturesCheckbox = new JCheckBox(ApplicationBundle.message("use.ligatures"));
+  private final JCheckBox myEnableNumberSqueeze = new JCheckBox(ApplicationBundle.message("use.squeeze"));
   private final AbstractFontCombo<?> mySecondaryCombo;
 
   @NotNull private final JBCheckBox myOnlyMonospacedCheckBox =
@@ -157,6 +158,29 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
     warningIcon.setBorder(JBUI.Borders.emptyLeft(5));
     warningIcon.setVisible(!areLigaturesAllowed());
     panel.add(warningIcon);
+    c.gridx = 0;
+    c.gridy ++;
+    c.gridwidth = 2;
+    c.insets = getInsets(ADDITIONAL_VERTICAL_GAP, 0);
+    c.insets.bottom = BASE_INSET;
+    fontPanel.add(panel, c);
+
+    panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+    panel.setBorder(JBUI.Borders.empty());
+    panel.add(myEnableNumberSqueeze);
+    hintLabel = new JLabel(AllIcons.General.ContextHelp);
+    hintLabel.setToolTipText(ApplicationBundle.message("squeeze.tooltip"));
+    hintLabel.setBorder(JBUI.Borders.emptyLeft(5));
+    panel.add(hintLabel);
+    //warningIcon = new JLabel(AllIcons.General.BalloonWarning);
+    //IdeTooltipManager.getInstance().setCustomTooltip(
+    //  warningIcon,
+    //  new TooltipWithClickableLinks.ForBrowser(warningIcon,
+    //                                           ApplicationBundle.message("ligatures.jre.warning",
+    //                                                                     ApplicationNamesInfo.getInstance().getFullProductName())));
+    //warningIcon.setBorder(JBUI.Borders.emptyLeft(5));
+    //warningIcon.setVisible(!areLigaturesAllowed());
+    //panel.add(warningIcon);
     c.gridx = 0;
     c.gridy ++;
     c.gridwidth = 2;
