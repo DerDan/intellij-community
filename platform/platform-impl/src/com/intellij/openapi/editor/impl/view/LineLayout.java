@@ -40,6 +40,7 @@ import java.util.stream.Stream;
  */
 abstract class LineLayout {
   private static final Logger LOG = Logger.getInstance(LineLayout.class);
+  private static final String HEX_DIGITS = "0123456789ABCDEFabcdef";
 
   private LineLayout() {}
 
@@ -350,11 +351,23 @@ abstract class LineLayout {
     }
   }
 
+  private static int countHexSequence(char[] chars, int from, int to) {
+    if (from >= to) return 0;
+    int maxChar = to - from;
+    int count;
+    for (count = 0; count < maxChar; count++) {
+      if (HEX_DIGITS.indexOf(chars[from + count]) < 0) {
+        break;
+      }
+    }
+    return count;
+  }
+
   private static int countOther(char[] chars, int from, int to) {
     int maxChar = to - from;
     int count;
     for (count = 0; count < maxChar; count++) {
-      if (Character.isDigit(chars[from + count])) {
+      if (Character.isDigit(chars[from + count]) || chars[from + count] == '.' || chars[from + count] == ',') {
         break;
       }
     }
