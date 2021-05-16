@@ -352,6 +352,11 @@ abstract class LineLayout {
     }
   }
 
+  private static boolean isMonospaced(FontInfo info)
+  {
+    return FontFamilyService.isMonospaced(info.getFont().getFamily());
+  }
+
   private static int countHexSequence(char[] chars, int from, int to) {
     if (from >= to) return 0;
     int maxChar = to - from;
