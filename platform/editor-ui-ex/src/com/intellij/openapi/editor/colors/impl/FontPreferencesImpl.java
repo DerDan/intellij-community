@@ -4,6 +4,7 @@ package com.intellij.openapi.editor.colors.impl;
 import com.intellij.application.options.EditorFontsConstants;
 import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.colors.FontPreferences;
+import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.colors.ModifiableFontPreferences;
 import com.intellij.openapi.util.NlsSafe;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -33,7 +34,7 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
   @Nullable private String myBoldSubFamily;
 
   private boolean myUseLigatures;
-  private boolean mySqueezeNumbers;
+  private GroupNumbers myGroupNumbers;
   private float myLineSpacing = DEFAULT_LINE_SPACING;
 
   @Nullable private Runnable myChangeListener;
@@ -63,6 +64,7 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
     myEffectiveFontFamilies.clear();
     myRealFontFamilies.clear();
     myUseLigatures = false;
+    myGroupNumbers = GroupNumbers.NONE;
     myRegularSubFamily = null;
     myBoldSubFamily = null;
     if (myChangeListener != null) {
@@ -182,6 +184,7 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
         }
       }
       modifiablePreferences.setUseLigatures(myUseLigatures);
+      modifiablePreferences.setGroupNumbers(myGroupNumbers);
       modifiablePreferences.setLineSpacing(myLineSpacing);
       modifiablePreferences.setRegularSubFamily(myRegularSubFamily);
       modifiablePreferences.setBoldSubFamily(myBoldSubFamily);
@@ -235,6 +238,7 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
     }
 
     if (myUseLigatures != that.myUseLigatures) return false;
+    if (myGroupNumbers != that.myGroupNumbers) return false;
     if (myLineSpacing != that.myLineSpacing) return false;
     if (!Objects.equals(myRegularSubFamily, that.myRegularSubFamily)) return false;
     if (!Objects.equals(myBoldSubFamily, that.myBoldSubFamily)) return false;
@@ -248,6 +252,12 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
   }
 
   @Override
+  public GroupNumbers groupNumbers() {
+    return myGroupNumbers;
+  }
+
+
+  @Override
   public void setUseLigatures(boolean useLigatures) {
     if (useLigatures != myUseLigatures) {
       myUseLigatures = useLigatures;
@@ -258,9 +268,9 @@ public class FontPreferencesImpl extends ModifiableFontPreferences {
   }
 
   @Override
-  public void setSqueezeNumbers(boolean squeezeNumbers) {
-    if (squeezeNumbers != mySqueezeNumbers) {
-      mySqueezeNumbers = squeezeNumbers;
+  public void setGroupNumbers(GroupNumbers groupNumbers) {
+    if (groupNumbers != myGroupNumbers) {
+      myGroupNumbers = groupNumbers;
       if (myChangeListener != null) {
         myChangeListener.run();
       }

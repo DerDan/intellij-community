@@ -10,6 +10,7 @@ import com.intellij.openapi.application.ApplicationBundle;
 import com.intellij.openapi.application.ApplicationNamesInfo;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.FontPreferences;
+import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.colors.ModifiableFontPreferences;
 import com.intellij.openapi.options.ex.Settings;
 import com.intellij.ui.*;
@@ -52,7 +53,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
   @NotNull private final JTextField myLineSpacingField = new JBTextField(4);
   private final AbstractFontCombo<?> myPrimaryCombo;
   private final JCheckBox myEnableLigaturesCheckbox = new JCheckBox(ApplicationBundle.message("use.ligatures"));
-  private final JCheckBox myEnableNumberSqueeze = new JCheckBox(ApplicationBundle.message("use.squeeze"));
+  private final JCheckBox myEnableGroupNumbersCheckbox = new JCheckBox(ApplicationBundle.message("use.groupNumbers"));
   private final AbstractFontCombo<?> mySecondaryCombo;
 
   @NotNull private final JBCheckBox myOnlyMonospacedCheckBox =
@@ -167,9 +168,9 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
     panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
     panel.setBorder(JBUI.Borders.empty());
-    panel.add(myEnableNumberSqueeze);
+    panel.add(myEnableGroupNumbersCheckbox);
     hintLabel = new JLabel(AllIcons.General.ContextHelp);
-    hintLabel.setToolTipText(ApplicationBundle.message("squeeze.tooltip"));
+    hintLabel.setToolTipText(ApplicationBundle.message("group_numbers.tooltip"));
     hintLabel.setBorder(JBUI.Borders.emptyLeft(5));
     panel.add(hintLabel);
     //warningIcon = new JLabel(AllIcons.General.BalloonWarning);
@@ -279,6 +280,13 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
         updateDescription(true);
       }
     });
+    myEnableGroupNumbersCheckbox.addActionListener(e -> {
+      FontPreferences preferences = getFontPreferences();
+      if (preferences instanceof ModifiableFontPreferences) {
+        ((ModifiableFontPreferences)preferences).setGroupNumbers(myEnableGroupNumbersCheckbox.isSelected() ? GroupNumbers.SQUEEZE : GroupNumbers.NONE);
+        updateDescription(true);
+      }
+    });
     return fontPanel;
   }
 
@@ -367,6 +375,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
       ModifiableFontPreferences modifiableFontPreferences = (ModifiableFontPreferences)fontPreferences;
       modifiableFontPreferences.clearFonts();
       modifiableFontPreferences.setUseLigatures(myEnableLigaturesCheckbox.isSelected());
+      modifiableFontPreferences.setGroupNumbers(myEnableGroupNumbersCheckbox.isSelected() ? GroupNumbers.SQUEEZE : GroupNumbers.NONE);
       String primaryFontFamily = myPrimaryCombo.getFontName();
       String secondaryFontFamily = mySecondaryCombo.isNoFontSelected() ? null : mySecondaryCombo.getFontName();
       int fontSize = getFontSizeFromField();
@@ -413,6 +422,9 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
     myEnableLigaturesCheckbox.setEnabled(!readOnly && areLigaturesAllowed());
     myEnableLigaturesCheckbox.setSelected(fontPreferences.useLigatures());
+
+    myEnableGroupNumbersCheckbox.setEnabled(!readOnly);
+    myEnableGroupNumbersCheckbox.setSelected(fontPreferences.groupNumbers() != GroupNumbers.NONE);
 
     myIsInSchemeChange = false;
   }

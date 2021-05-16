@@ -12,6 +12,7 @@ import java.awt.*;
 import java.util.Collections;
 import java.util.List;
 
+
 public class FontPreferences {
   public final static @NlsSafe @NotNull String DEFAULT_FONT_NAME = getDefaultFontName();
   public static final String JETBRAINS_MONO = "JetBrains Mono";
@@ -58,6 +59,10 @@ public class FontPreferences {
 
   public boolean useLigatures() {
     return false;
+  }
+
+  public GroupNumbers groupNumbers() {
+    return GroupNumbers.NONE;
   }
 
   public boolean hasSize(@NotNull String fontName) {

@@ -1,6 +1,7 @@
 // Copyright 2000-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package com.intellij.openapi.editor.impl;
 
+import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.impl.view.FontLayoutService;
 import com.intellij.openapi.util.SystemInfo;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -24,6 +25,7 @@ public final class FontInfo {
     Collections.singletonMap(TextAttribute.LIGATURES, TextAttribute.LIGATURES_ON);
 
   private final Font myFont;
+  private final GroupNumbers myGroupNumbers;
   private final int mySize;
   private final IntSet mySafeCharacters = new IntOpenHashSet();
   private final FontRenderContext myContext;
@@ -33,23 +35,25 @@ public final class FontInfo {
    * To get valid font metrics from this {@link FontInfo} instance, pass valid {@link FontRenderContext} here as a parameter.
    */
   public FontInfo(final String familyName, final int size, @JdkConstants.FontStyle int style, boolean useLigatures,
-                  FontRenderContext fontRenderContext) {
+                  GroupNumbers groupNumbers, FontRenderContext fontRenderContext) {
     mySize = size;
     Font font = new Font(familyName, style, size);
     myFont = useLigatures ? font.deriveFont(LIGATURES_ATTRIBUTES) : font;
+    myGroupNumbers = groupNumbers;
     myContext = fontRenderContext;
   }
 
   /**
    * To get valid font metrics from this {@link FontInfo} instance, pass valid {@link FontRenderContext} here as a parameter.
    */
-  public FontInfo(Font font, int size, boolean useLigatures, FontRenderContext fontRenderContext) {
+  public FontInfo(Font font, int size, boolean useLigatures, GroupNumbers groupNumbers, FontRenderContext fontRenderContext) {
     mySize = size;
     font = font.deriveFont((float)size);
     if (useLigatures) {
       font = font.deriveFont(LIGATURES_ATTRIBUTES);
     }
     myFont = font;
+    myGroupNumbers = groupNumbers;
     myContext = fontRenderContext;
   }
 
@@ -84,6 +88,10 @@ public final class FontInfo {
     return myFont;
   }
 
+  public GroupNumbers getGroupNumbers() {
+    return myGroupNumbers;
+  }
+
   public int charWidth(int codePoint) {
     final FontMetrics metrics = fontMetrics();
     return FontLayoutService.getInstance().charWidth(metrics, codePoint);
@@ -108,7 +116,7 @@ public final class FontInfo {
 
   public static FontRenderContext getFontRenderContext(Component component) {
     if (component == null) {
-        return DEFAULT_CONTEXT;
+      return DEFAULT_CONTEXT;
     }
     return component.getFontMetrics(DUMMY_FONT).getFontRenderContext();
   }

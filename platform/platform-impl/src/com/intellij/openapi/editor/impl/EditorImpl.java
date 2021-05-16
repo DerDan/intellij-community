@@ -4447,6 +4447,7 @@ public final class EditorImpl extends UserDataHolderBase implements EditorEx, Hi
         }
       }
       preferences.setUseLigatures(delegatePreferences != null && delegatePreferences.useLigatures());
+      preferences.setGroupNumbers(delegatePreferences == null ? GroupNumbers.NONE : delegatePreferences.groupNumbers());
       preferences.setRegularSubFamily(delegatePreferences == null ? null : delegatePreferences.getRegularSubFamily());
       preferences.setBoldSubFamily(delegatePreferences == null ? null : delegatePreferences.getBoldSubFamily());
     }

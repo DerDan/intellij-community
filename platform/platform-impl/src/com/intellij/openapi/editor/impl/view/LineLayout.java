@@ -9,6 +9,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.bidi.BidiRegionsSeparator;
 import com.intellij.openapi.editor.bidi.LanguageBidiRegionsSeparator;
+import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.openapi.editor.impl.EditorImpl;
 import com.intellij.openapi.editor.impl.FontFallbackIterator;
@@ -300,7 +301,8 @@ abstract class LineLayout {
   private static void addTextFragmentIfNeeded(Chunk chunk, char[] chars, int from, int to, FontInfo fontInfo, boolean isRtl) {
     if (to > from) {
       assert fontInfo != null;
-      if (true) {
+      GroupNumbers groupNumbers = fontInfo.getGroupNumbers();
+      if (groupNumbers != GroupNumbers.NONE) {
         while (to > from) {
           int count = 0;
           int left = to - from;
@@ -314,6 +316,8 @@ abstract class LineLayout {
               chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, 4));
               from += count;
               count = 0;
+            }else{
+              count = 2;
             }
           }
           else {

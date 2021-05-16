@@ -6,6 +6,7 @@ import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.colors.FontPreferences;
+import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.colors.impl.FontPreferencesImpl;
 import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.editor.ex.DocumentEx;
@@ -676,6 +677,7 @@ public class EditorImplTest extends AbstractEditorTest {
     FontPreferencesImpl preferences = new FontPreferencesImpl();
     preferences.register("CustomFont", 32);
     preferences.setUseLigatures(true);
+    preferences.setGroupNumbers(GroupNumbers.SQUEEZE);
     colorsScheme.setFontPreferences(preferences);
 
     FontPreferences p = colorsScheme.getFontPreferences();
@@ -686,6 +688,7 @@ public class EditorImplTest extends AbstractEditorTest {
     FontPreferencesImpl preferences2 = new FontPreferencesImpl();
     preferences2.register("CustomFont2", 23);
     preferences2.setUseLigatures(false);
+    preferences2.setGroupNumbers(GroupNumbers.NONE);
     colorsScheme.setFontPreferences(preferences2);
 
     FontPreferences p2 = colorsScheme.getFontPreferences();
