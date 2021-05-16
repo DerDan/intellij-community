@@ -13,6 +13,8 @@ import com.intellij.openapi.editor.colors.FontPreferences;
 import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.colors.ModifiableFontPreferences;
 import com.intellij.openapi.options.ex.Settings;
+import com.intellij.openapi.ui.ComboBox;
+import com.intellij.openapi.util.NlsSafe;
 import com.intellij.ui.*;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
@@ -20,6 +22,7 @@ import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.components.fields.IntegerField;
 import com.intellij.util.EventDispatcher;
 import com.intellij.util.MathUtil;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
@@ -32,10 +35,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 public abstract class AbstractFontOptionsPanel extends JPanel implements OptionsPanel {
 
@@ -52,8 +53,20 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
                                                                              EditorFontsConstants.getMaxEditorFontSize());
   @NotNull private final JTextField myLineSpacingField = new JBTextField(4);
   private final AbstractFontCombo<?> myPrimaryCombo;
+
+  private final Map<String, GroupNumbers> myGroupNumbersMap;
+  {
+    Map<String, GroupNumbers> map = new LinkedHashMap<>();
+    map.put(ApplicationBundle.message("combobox.group.numbers.none"), GroupNumbers.NONE);
+    map.put(ApplicationBundle.message("combobox.group.numbers.squeeze"), GroupNumbers.SQUEEZE);
+    map.put(ApplicationBundle.message("combobox.group.numbers.swiss"), GroupNumbers.SWISS);
+    map.put(ApplicationBundle.message("combobox.group.numbers.underlined"), GroupNumbers.UNDER_LINED);
+    myGroupNumbersMap = Collections.unmodifiableMap(map);
+  }
+
   private final JCheckBox myEnableLigaturesCheckbox = new JCheckBox(ApplicationBundle.message("use.ligatures"));
-  private final JCheckBox myEnableGroupNumbersCheckbox = new JCheckBox(ApplicationBundle.message("use.groupNumbers"));
+  private final ComboBox<String>
+    myGroupNumbersComboBox = new ComboBox<String>(new CollectionComboBoxModel<>(new ArrayList<>(myGroupNumbersMap.keySet())));
   private final AbstractFontCombo<?> mySecondaryCombo;
 
   @NotNull private final JBCheckBox myOnlyMonospacedCheckBox =
@@ -61,6 +74,7 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
   private boolean myIsInSchemeChange;
   private JLabel myPrimaryLabel;
+  private JLabel myGroupLabel;
   private JLabel mySizeLabel;
 
   protected final static int ADDITIONAL_VERTICAL_GAP = 12;
@@ -168,7 +182,11 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
 
     panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
     panel.setBorder(JBUI.Borders.empty());
-    panel.add(myEnableGroupNumbersCheckbox);
+
+    myGroupLabel = new JLabel(ApplicationBundle.message("use.groupNumbers"));
+    myGroupLabel.setLabelFor(myPrimaryCombo);
+    panel.add(myGroupLabel, c);
+    panel.add(myGroupNumbersComboBox);
     hintLabel = new JLabel(AllIcons.General.ContextHelp);
     hintLabel.setToolTipText(ApplicationBundle.message("group_numbers.tooltip"));
     hintLabel.setBorder(JBUI.Borders.emptyLeft(5));
@@ -280,10 +298,11 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
         updateDescription(true);
       }
     });
-    myEnableGroupNumbersCheckbox.addActionListener(e -> {
+    myGroupNumbersComboBox.addActionListener(e -> {
       FontPreferences preferences = getFontPreferences();
       if (preferences instanceof ModifiableFontPreferences) {
-        ((ModifiableFontPreferences)preferences).setGroupNumbers(myEnableGroupNumbersCheckbox.isSelected() ? GroupNumbers.SQUEEZE : GroupNumbers.NONE);
+        String groupNumbersName = (String)myGroupNumbersComboBox.getModel().getSelectedItem();
+        ((ModifiableFontPreferences)preferences).setGroupNumbers(myGroupNumbersMap.get(groupNumbersName));
         updateDescription(true);
       }
     });
@@ -375,7 +394,8 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
       ModifiableFontPreferences modifiableFontPreferences = (ModifiableFontPreferences)fontPreferences;
       modifiableFontPreferences.clearFonts();
       modifiableFontPreferences.setUseLigatures(myEnableLigaturesCheckbox.isSelected());
-      modifiableFontPreferences.setGroupNumbers(myEnableGroupNumbersCheckbox.isSelected() ? GroupNumbers.SQUEEZE : GroupNumbers.NONE);
+      String groupNumbersName = (String)myGroupNumbersComboBox.getModel().getSelectedItem();
+      modifiableFontPreferences.setGroupNumbers(myGroupNumbersMap.get(groupNumbersName));
       String primaryFontFamily = myPrimaryCombo.getFontName();
       String secondaryFontFamily = mySecondaryCombo.isNoFontSelected() ? null : mySecondaryCombo.getFontName();
       int fontSize = getFontSizeFromField();
@@ -423,8 +443,9 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
     myEnableLigaturesCheckbox.setEnabled(!readOnly && areLigaturesAllowed());
     myEnableLigaturesCheckbox.setSelected(fontPreferences.useLigatures());
 
-    myEnableGroupNumbersCheckbox.setEnabled(!readOnly);
-    myEnableGroupNumbersCheckbox.setSelected(fontPreferences.groupNumbers() != GroupNumbers.NONE);
+    myGroupNumbersComboBox.setEnabled(!readOnly);
+    @NlsSafe String name = ContainerUtil.reverseMap(myGroupNumbersMap).get(fontPreferences.groupNumbers());
+    myGroupNumbersComboBox.getModel().setSelectedItem(name);
 
     myIsInSchemeChange = false;
   }

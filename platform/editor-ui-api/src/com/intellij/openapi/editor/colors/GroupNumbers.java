@@ -3,5 +3,7 @@ package com.intellij.openapi.editor.colors;
 
 public enum GroupNumbers {
   NONE,
-  SQUEEZE
+  SQUEEZE,
+  SWISS,
+  UNDER_LINED
 }

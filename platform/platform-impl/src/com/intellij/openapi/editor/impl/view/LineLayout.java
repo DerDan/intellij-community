@@ -13,6 +13,7 @@ import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.openapi.editor.impl.EditorImpl;
 import com.intellij.openapi.editor.impl.FontFallbackIterator;
+import com.intellij.openapi.editor.impl.FontFamilyService;
 import com.intellij.openapi.editor.impl.FontInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.StringEscapesTokenTypes;
@@ -349,6 +350,11 @@ abstract class LineLayout {
         chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, to, isRtl, fontInfo));
       }
     }
+  }
+
+  private static boolean isMonospaced(FontInfo info)
+  {
+    return FontFamilyService.isMonospaced(info.getFont().getFamily());
   }
 
   private static int countHexSequence(char[] chars, int from, int to) {

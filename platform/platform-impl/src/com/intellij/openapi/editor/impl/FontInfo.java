@@ -136,6 +136,7 @@ public final class FontInfo {
 
     FontInfo fontInfo = (FontInfo)o;
 
+    if (myGroupNumbers != fontInfo.myGroupNumbers) return false;
     if (!myFont.equals(fontInfo.myFont)) return false;
 
     return true;
@@ -143,6 +144,6 @@ public final class FontInfo {
 
   @Override
   public int hashCode() {
-    return myFont.hashCode();
+    return myGroupNumbers.hashCode() + 31 * myFont.hashCode();
   }
 }
