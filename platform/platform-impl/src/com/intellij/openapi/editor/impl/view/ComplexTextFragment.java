@@ -27,10 +27,11 @@ class ComplexTextFragment extends TextFragment {
   private final short @Nullable [] myCodePoint2Offset; // Start offset of each Unicode code point in the fragment
   // (null if each code point takes one char).
   // We expect no more than 1025 chars in a fragment, so 'short' should be enough.
-  private float myShiftAccentX;
-  private float myShiftAccentY;
+  private float myEffectShiftX;
+  private int myEffectShiftY;
   private int myGroupModulo = 0;
   private int myGroupModuloStart = 0;
+  private int myGroupHook = 0;
 
   ComplexTextFragment(char @NotNull [] lineChars, int start, int end, boolean isRtl, @NotNull FontInfo fontInfo) {
     this(lineChars, start, end, isRtl, fontInfo, 0);
@@ -108,6 +109,7 @@ class ComplexTextFragment extends TextFragment {
 
   private void groupNumbers(boolean isRtl, @NotNull FontInfo fontInfo, int groupNumbers, int numGlyphs) {
     char[] accent = null;
+    FontMetrics metrics = fontInfo.fontMetrics();
     if (!isRtl && groupNumbers != 0) {
       switch (fontInfo.getGroupNumbers()) {
         case NONE:
@@ -121,31 +123,40 @@ class ComplexTextFragment extends TextFragment {
           accent = accentChars(numGlyphs - 1, groupNumbers, '\'');
           break;
         case UNDER_LINED:
-          if (groupNumbers > 0) {
-            myGroupModulo = groupNumbers;
-            myGroupModuloStart = (1 + ((numGlyphs - 1) % (groupNumbers * 2)) - groupNumbers);
-          }
-          else {
-            myGroupModulo = -groupNumbers;
-            myGroupModuloStart = -groupNumbers;
-          }
+          calculateLined(groupNumbers, numGlyphs, metrics.getDescent() / 2, 0);
+          break;
+        case UNDER_LINED_HOOK:
+          calculateLined(groupNumbers, numGlyphs, metrics.getDescent() / 2 + 3, -5);
+          break;
+        case OVER_LINED:
+          calculateLined(groupNumbers, numGlyphs, -metrics.getAscent(), 0);
+          break;
+        case OVER_LINED_HOOK:
+          calculateLined(groupNumbers, numGlyphs, -metrics.getAscent() - 3, 5);
           break;
         default:
           break;
       }
+      if (accent != null) {
+        myAccentVector = FontLayoutService.getInstance().layoutGlyphVector(fontInfo.getFont(), fontInfo.getFontRenderContext(),
+                                                                           accent, 0, accent.length, false);
+        myEffectShiftX = fontInfo.charWidth2D(' ') / 2;
+        myEffectShiftY = metrics.getAscent() - metrics.getHeight();
+      }
     }
-    if (accent != null) {
-      myAccentVector = FontLayoutService.getInstance().layoutGlyphVector(fontInfo.getFont(), fontInfo.getFontRenderContext(),
-                                                                         accent, 0, accent.length, false);
-      FontMetrics metrics = fontInfo.fontMetrics();
-      myShiftAccentX = fontInfo.charWidth2D(' ') / 2;
-      myShiftAccentY = metrics.getAscent() - metrics.getHeight();
+  }
+
+  private void calculateLined(int groupNumbers, int numGlyphs, int Y, int hook) {
+    if (groupNumbers > 0) {
+      myGroupModulo = groupNumbers;
+      myGroupModuloStart = (1 + ((numGlyphs - 1) % (groupNumbers * 2)) - groupNumbers);
     }
     else {
-      myAccentVector = null;
-      myShiftAccentX = 0;
-      myShiftAccentY = 0;
+      myGroupModulo = -groupNumbers;
+      myGroupModuloStart = -groupNumbers;
     }
+    myGroupHook = hook;
+    myEffectShiftY = Y;
   }
 
   private char[] accentChars(int numGlyphs, int numbers, char c) {
@@ -252,7 +263,7 @@ class ComplexTextFragment extends TextFragment {
     if (startColumn == 0 && endColumn == myCharPositions.length) {
       g.drawGlyphVector(myGlyphVector, x, y);
       drawAccents(g, x, y);
-      drawUnderLine(g, x, y);
+      drawLined(g, x, y);
     }
     else {
       Shape savedClip = g.getClip();
@@ -266,26 +277,35 @@ class ComplexTextFragment extends TextFragment {
       g.clip(new Rectangle2D.Double(xMin, yMin, xMax - xMin, yMax - yMin));
       g.drawGlyphVector(myGlyphVector, startX, y);
       drawAccents(g, startX, y);
-      drawUnderLine(g, startX, y);
+      drawLined(g, startX, y);
       g.setClip(savedClip);
     }
   }
 
-  private void drawUnderLine(Graphics2D g, float x, float y) {
+  private void drawLined(Graphics2D g, float x, float y) {
+    drawLined(g, (int)x, (int)y);
+  }
+
+  private void drawLined(Graphics2D g, int x, int y) {
     if (myGroupModulo > 0) {
       int numbers = myCharPositions.length;
       for (int n = myGroupModuloStart; n < numbers; n += myGroupModulo * 2) {
-        float x1 = (n > 0) ? x + myCharPositions[n - 1] : x;
+        int x1 = (n > 0) ? x + (int)myCharPositions[n - 1] : x;
         int offset2 = n - 1 + myGroupModulo;
-        float x2 = x + myCharPositions[(offset2 >= numbers) ? numbers - 1 : offset2];
-        g.drawLine((int)x1, (int)y + 3, (int)x2, (int)y + 3);
+        int x2 = x - 1 + (int)myCharPositions[(offset2 >= numbers) ? numbers - 1 : offset2];
+        int adist = Math.abs(myGroupHook);
+        g.drawLine(x1 + adist, y + myEffectShiftY, x2 - adist, y + myEffectShiftY);
+        if (myGroupHook != 0) {
+          g.drawLine(x1 + adist, y + myEffectShiftY, x1, y + myEffectShiftY + myGroupHook);
+          g.drawLine(x2 - adist, y + myEffectShiftY, x2, y + myEffectShiftY + myGroupHook);
+        }
       }
     }
   }
 
   private void drawAccents(Graphics2D g, float x, float y) {
     if (myAccentVector != null) {
-      g.drawGlyphVector(myAccentVector, x + myShiftAccentX, y + myShiftAccentY);
+      g.drawGlyphVector(myAccentVector, x + myEffectShiftX, y + myEffectShiftY);
     }
   }
 

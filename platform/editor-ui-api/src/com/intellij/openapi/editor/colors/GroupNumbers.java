@@ -5,5 +5,8 @@ public enum GroupNumbers {
   NONE,
   SQUEEZE,
   SWISS,
-  UNDER_LINED
+  UNDER_LINED,
+  UNDER_LINED_HOOK,
+  OVER_LINED,
+  OVER_LINED_HOOK;
 }

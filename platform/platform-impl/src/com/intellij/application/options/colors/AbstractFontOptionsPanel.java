@@ -60,7 +60,10 @@ public abstract class AbstractFontOptionsPanel extends JPanel implements Options
     map.put(ApplicationBundle.message("combobox.group.numbers.none"), GroupNumbers.NONE);
     map.put(ApplicationBundle.message("combobox.group.numbers.squeeze"), GroupNumbers.SQUEEZE);
     map.put(ApplicationBundle.message("combobox.group.numbers.swiss"), GroupNumbers.SWISS);
-    map.put(ApplicationBundle.message("combobox.group.numbers.underlined"), GroupNumbers.UNDER_LINED);
+    map.put(ApplicationBundle.message("combobox.group.numbers.underlined.pure"), GroupNumbers.UNDER_LINED);
+    map.put(ApplicationBundle.message("combobox.group.numbers.underlined.hook"), GroupNumbers.UNDER_LINED_HOOK);
+    map.put(ApplicationBundle.message("combobox.group.numbers.overlined.pure"), GroupNumbers.OVER_LINED);
+    map.put(ApplicationBundle.message("combobox.group.numbers.overlined.hook"), GroupNumbers.OVER_LINED_HOOK);
     myGroupNumbersMap = Collections.unmodifiableMap(map);
   }
 
