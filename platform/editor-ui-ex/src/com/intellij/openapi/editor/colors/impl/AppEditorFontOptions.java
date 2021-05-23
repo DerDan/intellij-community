@@ -11,6 +11,7 @@ import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.colors.EditorFontCache;
 import com.intellij.openapi.editor.colors.FontPreferences;
+import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.colors.ModifiableFontPreferences;
 import com.intellij.openapi.editor.impl.FontFamilyService;
 import com.intellij.openapi.util.NlsSafe;
@@ -59,6 +60,8 @@ public final class AppEditorFontOptions implements
     @ReportValue
     public boolean USE_LIGATURES = false;
     @ReportValue
+    public GroupNumbers GROUP_NUMBERS = GroupNumbers.NONE;
+    @ReportValue
     public @NlsSafe @Nullable String SECONDARY_FONT_FAMILY;
 
     /**
@@ -75,6 +78,7 @@ public final class AppEditorFontOptions implements
       FONT_SCALE = UISettings.getDefFontScale();
       LINE_SPACING = fontPreferences.getLineSpacing();
       USE_LIGATURES = fontPreferences.useLigatures();
+      GROUP_NUMBERS = fontPreferences.groupNumbers();
       List<String> fontFamilies = fontPreferences.getEffectiveFontFamilies();
       if (fontFamilies.size() > 1) {
         SECONDARY_FONT_FAMILY = fontFamilies.get(1);
@@ -111,6 +115,7 @@ public final class AppEditorFontOptions implements
     fontPreferences.setBoldSubFamily(names[2]);
     fontPreferences.setLineSpacing(state.LINE_SPACING);
     fontPreferences.setUseLigatures(state.USE_LIGATURES);
+    fontPreferences.setGroupNumbers(state.GROUP_NUMBERS);
     if (state.SECONDARY_FONT_FAMILY != null) {
       fontPreferences.register(state.SECONDARY_FONT_FAMILY, fontSize);
     }

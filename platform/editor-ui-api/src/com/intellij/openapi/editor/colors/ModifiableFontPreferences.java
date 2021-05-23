@@ -23,6 +23,7 @@ public abstract class ModifiableFontPreferences extends FontPreferences {
   public abstract void clear();
   public abstract void clearFonts();
   public abstract void setUseLigatures(boolean useLigatures);
+  public abstract void setGroupNumbers(GroupNumbers groupNumbers);
   public abstract void addFontFamily(String family);
   public abstract void register(String family, int size);
   public abstract void setEffectiveFontFamilies(List<String> fontFamilies);

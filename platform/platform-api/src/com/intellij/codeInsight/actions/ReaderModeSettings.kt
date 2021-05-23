@@ -14,6 +14,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.FileIndexFacade
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
+import com.intellij.openapi.editor.colors.GroupNumbers
 
 @State(name = "ReaderModeSettings", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
 class ReaderModeSettings : PersistentStateComponentWithModificationTracker<ReaderModeSettings.State> {
@@ -76,6 +77,7 @@ class ReaderModeSettings : PersistentStateComponentWithModificationTracker<Reade
 
   class State : BaseState() {
     @get:ReportValue var showLigatures by property(EditorColorsManager.getInstance().globalScheme.fontPreferences.useLigatures())
+    //@get:ReportValue var groupNumbers by property(EditorColorsManager.getInstance().globalScheme.fontPreferences.groupNumbers())
     @get:ReportValue var increaseLineSpacing by property(false)
     @get:ReportValue var showRenderedDocs by property(true)
     @get:ReportValue var showInlayHints by property(true)
@@ -90,6 +92,13 @@ class ReaderModeSettings : PersistentStateComponentWithModificationTracker<Reade
     set(value) {
       state.showLigatures = value
     }
+
+  //var groupNumbers : Int
+  //  get() = state.groupNumbers
+  //  set(value)
+  //  {
+  //    state.groupNumbers = value
+  //  }
 
   var increaseLineSpacing: Boolean
     get() = state.increaseLineSpacing

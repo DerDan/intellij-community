@@ -1,6 +1,7 @@
 // Copyright 2000-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package com.intellij.openapi.editor.impl.view;
 
+import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.impl.FontInfo;
 import com.intellij.testFramework.AbstractMockGlyphVector;
 import com.intellij.testFramework.MockFontLayoutService;
@@ -87,7 +88,7 @@ public class ComplexTextFragmentTest {
     try {
       int length = gv.getNumChars();
       char[] text = new char[length];
-      FontInfo fontInfo = new FontInfo(Font.MONOSPACED, 1, Font.PLAIN, false, new FontRenderContext(null, false, false));
+      FontInfo fontInfo = new FontInfo(Font.MONOSPACED, 1, Font.PLAIN, false, GroupNumbers.NONE, new FontRenderContext(null, false, false));
       ComplexTextFragment fragment = new ComplexTextFragment(text, 0, length, (gv.getLayoutFlags() & GlyphVector.FLAG_RUN_RTL) != 0,
                                                              fontInfo);
       int[] charPositions = new int[length];
