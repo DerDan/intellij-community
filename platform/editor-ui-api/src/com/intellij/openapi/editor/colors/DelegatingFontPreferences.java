@@ -72,6 +72,11 @@ public class DelegatingFontPreferences extends FontPreferences {
   }
 
   @Override
+  public GroupNumbers groupNumbers() {
+    return myDelegateSupplier.get().groupNumbers();
+  }
+
+  @Override
   public boolean hasSize(@NotNull String fontName) {
     return myDelegateSupplier.get().hasSize(fontName);
   }

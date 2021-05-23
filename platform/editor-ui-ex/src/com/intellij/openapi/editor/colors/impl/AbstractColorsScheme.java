@@ -90,7 +90,9 @@ public abstract class AbstractColorsScheme extends EditorFontCacheImpl implement
   @NonNls private static final String EDITOR_FONT_SIZE               = "EDITOR_FONT_SIZE";
   @NonNls private static final String CONSOLE_FONT_SIZE              = "CONSOLE_FONT_SIZE";
   @NonNls private static final String EDITOR_LIGATURES               = "EDITOR_LIGATURES";
+  @NonNls private static final String EDITOR_GROUP_NUMBERS           = "EDITOR_GROUP_NUMBERS";
   @NonNls private static final String CONSOLE_LIGATURES              = "CONSOLE_LIGATURES";
+  @NonNls private static final String CONSOLE_GROUP_NUMBERS          = "CONSOLE_GROUP_NUMBERS";
 
 
   //region Meta info-related fields
@@ -214,10 +216,12 @@ public abstract class AbstractColorsScheme extends EditorFontCacheImpl implement
   public void setEditorFontName(String fontName) {
     ModifiableFontPreferences currPreferences = ensureEditableFontPreferences();
     boolean useLigatures = currPreferences.useLigatures();
+    GroupNumbers groupNumbers = currPreferences.groupNumbers();
     int editorFontSize = getEditorFontSize();
     currPreferences.clear();
     currPreferences.register(fontName, editorFontSize);
     currPreferences.setUseLigatures(useLigatures);
+    currPreferences.setGroupNumbers(groupNumbers);
     initFonts();
   }
 
@@ -479,10 +483,22 @@ public abstract class AbstractColorsScheme extends EditorFontCacheImpl implement
         if (value != null) ensureEditableFontPreferences().setUseLigatures(value);
         break;
       }
+      case EDITOR_GROUP_NUMBERS: {
+        GroupNumbers value = myValueReader.read(GroupNumbers.class, childNode);
+        if (value != null) ensureEditableFontPreferences().setGroupNumbers(value);
+        break;
+      }
       case CONSOLE_LIGATURES: {
         Boolean value = myValueReader.read(Boolean.class, childNode);
         if (value != null) {
           ensureEditableConsoleFontPreferences().setUseLigatures(value);
+        }
+        break;
+      }
+      case CONSOLE_GROUP_NUMBERS: {
+        GroupNumbers value = myValueReader.read(GroupNumbers.class, childNode);
+        if (value != null) {
+          ensureEditableConsoleFontPreferences().setGroupNumbers(value);
         }
         break;
       }
@@ -565,6 +581,7 @@ public abstract class AbstractColorsScheme extends EditorFontCacheImpl implement
         writeFontPreferences(EDITOR_FONT, parentNode, myFontPreferences);
       }
       writeLigaturesPreferences(parentNode, myFontPreferences, EDITOR_LIGATURES);
+      writeGroupNumbersPreferences(parentNode, myFontPreferences, EDITOR_GROUP_NUMBERS);
     }
 
     if (!(myConsoleFontPreferences instanceof DelegatingFontPreferences)) {
@@ -579,6 +596,7 @@ public abstract class AbstractColorsScheme extends EditorFontCacheImpl implement
         writeFontPreferences(CONSOLE_FONT, parentNode, myConsoleFontPreferences);
       }
       writeLigaturesPreferences(parentNode, myConsoleFontPreferences, CONSOLE_LIGATURES);
+      writeGroupNumbersPreferences(parentNode, myConsoleFontPreferences, CONSOLE_GROUP_NUMBERS);
       if ((myFontPreferences instanceof DelegatingFontPreferences) || getConsoleLineSpacing() != getLineSpacing()) {
         JdomKt.addOptionTag(parentNode, CONSOLE_LINE_SPACING, Float.toString(getConsoleLineSpacing()));
       }
@@ -603,6 +621,13 @@ public abstract class AbstractColorsScheme extends EditorFontCacheImpl implement
   private static void writeLigaturesPreferences(Element parentNode, FontPreferences preferences, String optionName) {
     if (preferences.useLigatures()) {
       JdomKt.addOptionTag(parentNode, optionName, String.valueOf(true));
+    }
+  }
+
+  private static void writeGroupNumbersPreferences(Element parentNode, FontPreferences preferences, String optionName) {
+    GroupNumbers groupNumbers = preferences.groupNumbers();
+    if (groupNumbers != GroupNumbers.NONE){
+      JdomKt.addOptionTag(parentNode, optionName, String.valueOf (groupNumbers));
     }
   }
 

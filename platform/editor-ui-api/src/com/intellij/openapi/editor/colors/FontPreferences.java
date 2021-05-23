@@ -60,6 +60,10 @@ public class FontPreferences {
     return false;
   }
 
+  public GroupNumbers groupNumbers() {
+    return GroupNumbers.NONE;
+  }
+
   public boolean hasSize(@NotNull String fontName) {
     return false;
   }

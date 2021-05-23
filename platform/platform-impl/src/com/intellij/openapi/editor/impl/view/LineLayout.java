@@ -9,9 +9,11 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.bidi.BidiRegionsSeparator;
 import com.intellij.openapi.editor.bidi.LanguageBidiRegionsSeparator;
+import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.openapi.editor.impl.EditorImpl;
 import com.intellij.openapi.editor.impl.FontFallbackIterator;
+import com.intellij.openapi.editor.impl.FontFamilyService;
 import com.intellij.openapi.editor.impl.FontInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.StringEscapesTokenTypes;
@@ -39,6 +41,7 @@ import java.util.stream.Stream;
  */
 abstract class LineLayout {
   private static final Logger LOG = Logger.getInstance(LineLayout.class);
+  private static final String HEX_DIGITS = "0123456789ABCDEFabcdef";
 
   private LineLayout() {}
 
@@ -295,8 +298,94 @@ abstract class LineLayout {
   private static void addTextFragmentIfNeeded(Chunk chunk, char[] chars, int from, int to, FontInfo fontInfo, boolean isRtl) {
     if (to > from) {
       assert fontInfo != null;
+      GroupNumbers groupNumbers = fontInfo.getGroupNumbers();
+      if (groupNumbers != GroupNumbers.NONE) {
+        while (to > from) {
+          int count;
+          int left = to - from;
+          boolean hex = left > 3 && chars[from] == '0' && (chars[from + 1] == 'x' || chars[from + 1] == 'X');
+          if (hex) {
+            count = countHexSequence(chars, from + 2, to);
+            if (count >= 5)
+            {
+              chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, from + 2, isRtl, fontInfo));
+              from +=2;
+              chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, 4));
+              from += count;
+              count = 0;
+            }else{
+              count = 2;
+            }
+          }
+          else {
+            boolean decimalSeparator = chars[from] == '.' || chars[from] == ',';
+            count = countDigitSequence(chars, from + (decimalSeparator ? 1 : 0), to);
+            if (count >= 4) {
+              if (decimalSeparator) {
+                chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, from + 1, isRtl, fontInfo));
+                from += 1;
+              }
+              chunk.fragments.add(new ComplexTextFragment(chars, from, from + count, isRtl, fontInfo, decimalSeparator ? -3 : 3));
+              from += count;
+              count = 0;
+            }
+            else {
+              if (decimalSeparator) {
+                count += 1;
+              }
+            }
+          }
+          count += countOther(chars, from + count, to);
+          if (count > 0) {
+            chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, from + count, isRtl, fontInfo));
+            from += count;
+          }
+        }
+      }
+      else {
       chunk.fragments.add(TextFragmentFactory.createTextFragment(chars, from, to, isRtl, fontInfo));
     }
+  }
+  }
+
+  private static boolean isMonospaced(FontInfo info)
+  {
+    return FontFamilyService.isMonospaced(info.getFont().getFamily());
+  }
+
+  private static int countHexSequence(char[] chars, int from, int to) {
+    if (from >= to) return 0;
+    int maxChar = to - from;
+    int count;
+    for (count = 0; count < maxChar; count++) {
+      if (HEX_DIGITS.indexOf(chars[from + count]) < 0) {
+        break;
+      }
+    }
+    return count;
+  }
+
+  private static int countOther(char[] chars, int from, int to) {
+    int maxChar = to - from;
+    int count;
+    for (count = 0; count < maxChar; count++) {
+      if (Character.isDigit(chars[from + count]) || chars[from + count] == '.' || chars[from + count] == ',') {
+        break;
+      }
+    }
+    return count;
+  }
+
+  private static int countDigitSequence(char[] chars, int from, int to) {
+    if (from >= to) return 0;
+    int maxChar = to - from;
+    int count;
+    for (count = 0; count < maxChar; count++) {
+      if (!Character.isDigit(chars[from + count])) {
+        break;
+      }
+    }
+    return count;
   }
 
   Iterable<VisualFragment> getFragmentsInVisualOrder(final float startX) {

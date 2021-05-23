@@ -1,6 +1,7 @@
 // Copyright 2000-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package com.intellij.openapi.editor.impl;
 
+import com.intellij.openapi.editor.colors.GroupNumbers;
 import com.intellij.openapi.editor.colors.impl.EditorFontCacheImpl;
 import com.intellij.openapi.editor.impl.view.FontLayoutService;
 import com.intellij.openapi.util.SystemInfo;
@@ -20,6 +21,7 @@ public final class FontInfo {
   private static final Font DUMMY_FONT = new Font(null);
 
   private final Font myFont;
+  private final GroupNumbers myGroupNumbers;
   private final int mySize;
   private final IntSet mySafeCharacters = new IntOpenHashSet();
   private final FontRenderContext myContext;
@@ -29,18 +31,20 @@ public final class FontInfo {
    * To get valid font metrics from this {@link FontInfo} instance, pass valid {@link FontRenderContext} here as a parameter.
    */
   public FontInfo(final String familyName, final int size, @JdkConstants.FontStyle int style, boolean useLigatures,
-                  FontRenderContext fontRenderContext) {
+                  GroupNumbers groupNumbers, FontRenderContext fontRenderContext) {
     mySize = size;
     myFont = EditorFontCacheImpl.deriveFontWithLigatures(new Font(familyName, style, size), useLigatures);
+    myGroupNumbers = groupNumbers;
     myContext = fontRenderContext;
   }
 
   /**
    * To get valid font metrics from this {@link FontInfo} instance, pass valid {@link FontRenderContext} here as a parameter.
    */
-  public FontInfo(Font font, int size, boolean useLigatures, FontRenderContext fontRenderContext) {
+  public FontInfo(Font font, int size, boolean useLigatures, GroupNumbers groupNumbers, FontRenderContext fontRenderContext) {
     mySize = size;
     myFont = EditorFontCacheImpl.deriveFontWithLigatures(font.deriveFont((float)size), useLigatures);
+    myGroupNumbers = groupNumbers;
     myContext = fontRenderContext;
   }
 
@@ -75,6 +79,9 @@ public final class FontInfo {
     return myFont;
   }
 
+  public GroupNumbers getGroupNumbers() {
+    return myGroupNumbers;
+  }
   public int charWidth(int codePoint) {
     final FontMetrics metrics = fontMetrics();
     return FontLayoutService.getInstance().charWidth(metrics, codePoint);
@@ -119,6 +126,7 @@ public final class FontInfo {
 
     FontInfo fontInfo = (FontInfo)o;
 
+    if (myGroupNumbers != fontInfo.myGroupNumbers) return false;
     if (!myFont.equals(fontInfo.myFont)) return false;
 
     return true;
@@ -126,6 +134,6 @@ public final class FontInfo {
 
   @Override
   public int hashCode() {
-    return myFont.hashCode();
+    return myGroupNumbers.hashCode() + 31 * myFont.hashCode();
   }
 }
