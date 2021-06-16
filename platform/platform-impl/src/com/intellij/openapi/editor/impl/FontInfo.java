@@ -2,9 +2,6 @@
 package com.intellij.openapi.editor.impl;
 
 import com.intellij.openapi.editor.colors.GroupNumbers;
-import com.intellij.openapi.editor.colors.impl.EditorFontCacheImpl;
-import com.intellij.openapi.editor.colors.GroupNumbers;
-import com.intellij.openapi.editor.colors.impl.EditorFontCacheImpl;
 import com.intellij.openapi.editor.impl.view.FontLayoutService;
 import com.intellij.openapi.util.SystemInfo;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
